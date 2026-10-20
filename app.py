@@ -13,10 +13,7 @@ from flask import request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-import click
-from sqlalchemy import text
-from sqlalchemy.engine import make_url
-from dashboard_service import montar_dashboard
+from flask_cors import CORS
 
 # importa abiblioteca para autenticação de Token da Web (JWT).
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt
@@ -31,30 +28,17 @@ import os
 app = Flask (__name__)
 
 # Habilita o back-end a responder solicitações do front-end.
-# Front-end e API são servidos pela mesma aplicação.
+CORS(app)
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Supabase usa PostgreSQL; SQLite é exclusivo para desenvolvimento e testes locais.
-conexao = os.getenv("DATABASE_URL", "sqlite:///desenvolvimento.db")
-if conexao.startswith(("postgres://", "postgresql://")):
-    conexao = "postgresql+psycopg://" + conexao.split("://", 1)[1]
-url_banco = make_url(conexao)
-app.config["SQLALCHEMY_DATABASE_URI"] = url_banco
+# Configura o banco de dados MySQL.
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-if url_banco.get_backend_name() == "postgresql":
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_pre_ping": True,
-        "connect_args": {"sslmode": "require", "connect_timeout": 10,
-                         "prepare_threshold": None},
-    }
 
-# Uma chave persistente é obrigatória; nunca versionar seu valor.
-chave_jwt = os.getenv("JWT_SECRET_KEY", "")
-if len(chave_jwt) < 32:
-    raise RuntimeError("Configure JWT_SECRET_KEY com pelo menos 32 caracteres no ambiente.")
-app.config["JWT_SECRET_KEY"] = chave_jwt
+# Configura o Token da web (JWT).
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
 
 # Inicializa o gerenciador de Tokens da web (jWT).
@@ -74,68 +58,33 @@ def obter_status_validade(data_validade, hoje=None):
         return "Quase vencendo"
     return "Ativo"
 
-# Preparação explícita: importar o app não altera o banco e não cria usuários padrão.
-@app.cli.command("init-db")
-def inicializar_banco():
-    """Cria as tabelas em um banco novo. Não migra esquemas existentes."""
+# Cria as tabelas de banco de dados, se ainda não existirem.
+with app.app_context():
     db.create_all()
-    if db.engine.dialect.name == "postgresql":
-        # A API Flask autentica o acesso; os clientes Supabase não acessam as tabelas.
-        for tabela in db.metadata.sorted_tables:
-            db.session.execute(text(f'ALTER TABLE "{tabela.name}" ENABLE ROW LEVEL SECURITY'))
-            db.session.execute(text(f'REVOKE ALL ON TABLE "{tabela.name}" FROM anon, authenticated'))
-        db.session.commit()
-    click.echo("Tabelas criadas com sucesso.")
 
-
-@app.cli.command("create-admin")
-@click.option("--nome", prompt=True)
-@click.option("--email", prompt=True)
-@click.password_option("--senha", confirmation_prompt=True)
-def criar_administrador(nome, email, senha):
-    """Cria o primeiro administrador sem senha padrão."""
-    if len(senha) < 12:
-        raise click.ClickException("Use uma senha com pelo menos 12 caracteres.")
-    if Usuario.query.filter_by(email=email).first():
-        raise click.ClickException("Este e-mail já está cadastrado.")
-    db.session.add(Usuario(nome=nome, email=email,
-                          senha=generate_password_hash(senha), administrador=True))
-    db.session.commit()
-    click.echo("Administrador criado.")
-
-
-@app.route("/")
-@app.route("/index.html")
-def pagina_login():
-    return render_template("html/index.html")
-
-
-@app.route("/<pagina>.html")
-@app.route("/templates/html/<pagina>.html")
-def pagina_aplicacao(pagina):
-    if pagina not in {"index", "dashboard", "estoque", "farmacos", "fornecedores", "movimentacoes"}:
-        from flask import abort
-        abort(404)
-    return render_template(f"html/{pagina}.html")
-
-
-@app.route("/health")
-def verificar_saude():
+    # Garante a existência da coluna status na tabela fornecedor
     try:
-        db.session.execute(text("SELECT 1"))
-        return jsonify({"status": "ok"})
+        from sqlalchemy import text
+        db.session.execute(text("ALTER TABLE fornecedor ADD COLUMN status BOOLEAN NOT NULL DEFAULT TRUE"))
+        db.session.commit()
     except Exception:
         db.session.rollback()
-        return jsonify({"status": "indisponivel"}), 503
+
+    # Insere o adminstrador caso nao exista.
+    if not Usuario.query.filter_by(email="admin@unesp.com").first():
+        master = Usuario(
+            nome="Administrador",
+            email="admin@unesp.com",
+            senha=generate_password_hash("admin"),
+            administrador=True
+        )
+        db.session.add(master)
+        db.session.commit()
 
 
-@app.before_request
-def validar_corpo_json():
-    if request.path.startswith("/api/") and request.method in {"POST", "PUT"} and request.path != "/api/logout":
-        dados = request.get_json(silent=True)
-        if not isinstance(dados, dict):
-            return jsonify({"erro": "Envie um objeto JSON válido."}), 400
-
+# @app.route('/')
+# def home():
+#     return render_template('html/index.html')
 
 # _________
 # Rota para login usuário.
@@ -146,8 +95,6 @@ def tela_login():
     dados = request.get_json()
     email = dados.get("email")
     senha = dados.get("senha")
-    if not isinstance(email, str) or not isinstance(senha, str) or not email or not senha:
-        return jsonify({"error": "Informe e-mail e senha."}), 400
 
      # Bsuca o usuario no banco de dados pelo cpf.
     usuarios = Usuario.query.filter_by(email=email).first()
@@ -157,7 +104,7 @@ def tela_login():
 
         #Login incorreto.
         return jsonify({"error": "Email ou senha inválidos."}), 401
-
+    
     else:
 
         # Login correto.
@@ -179,7 +126,7 @@ def logout():
 
 @app.route('/home')
 def dashboard():
-    return render_template("html/dashboard.html")
+    return "<h1>Login realizado com sucesso</h1>"
 
 
 # __________________________________________________________________________________________________________________
@@ -192,13 +139,11 @@ def obter_dashboard():
         return jsonify({"erro": "Acesso negado!"}), 403
 
     try:
-        try:
-            dias = int(request.args.get("dias", "30"))
-        except ValueError:
-            return jsonify({"erro": "Período inválido."}), 400
-        if dias not in (7, 30, 90):
-            return jsonify({"erro": "Selecione 7, 30 ou 90 dias."}), 400
-        resultado = montar_dashboard(dias)
+        resultado = {
+            "lotes_ativos": Lote.query.filter_by(status=True).count(),
+            "farmacos": Farmaco.query.filter_by(status=True).count(),
+            "movimentacoes": Movimentacao.query.count()
+        }
         return jsonify(resultado), 200
     except Exception:
         return jsonify({"erro": "Ocorreu um erro ao carregar o dashboard."}), 500
@@ -223,16 +168,11 @@ def criar_fornecedor():
     telefone=dados.get("telefone")
     email=dados.get("email")
 
-    if not all(isinstance(valor, str) and valor.strip() for valor in (nome, cnpj, telefone, email)):
-        return jsonify({"erro": "Nome, CNPJ, telefone e e-mail são obrigatórios."}), 400
-    if Fornecedor.query.filter_by(email=email).first():
-        return jsonify({"erro": "E-mail já cadastrado."}), 409
-
     try:
         # Verifica se o fornecedor já existe no banco de dados.
         if Fornecedor.query.filter_by(cnpj=cnpj).first():
             return jsonify({"error": "Fornecedor já existe."}), 409
-
+        
         else:
             novo_fornecedor = Fornecedor(
                 nome=nome,
@@ -294,7 +234,7 @@ def atualizar_fornecedor(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    fornecedor = db.session.get(Fornecedor, id)
+    fornecedor = Fornecedor.query.get(id)
     if not fornecedor:
         return jsonify({"erro": "Fornecedor não encontrado."}), 404
 
@@ -336,7 +276,7 @@ def excluir_fornecedor(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    fornecedor = db.session.get(Fornecedor, id)
+    fornecedor = Fornecedor.query.get(id)
     if not fornecedor:
         return jsonify({"erro": "Fornecedor não encontrado."}), 404
 
@@ -347,7 +287,7 @@ def excluir_fornecedor(id):
 
     from flask_jwt_extended import get_jwt_identity
     usuario_id = get_jwt_identity()
-    usuario = db.session.get(Usuario, int(usuario_id))
+    usuario = Usuario.query.get(int(usuario_id))
     if not usuario or not check_password_hash(usuario.senha, senha):
         return jsonify({"erro": "Senha incorreta. A exclusão não foi realizada."}), 401
 
@@ -397,7 +337,7 @@ def criar_farmaco():
         except (TypeError, ValueError):
             return jsonify({"erro": "Fornecedor inválido."}), 400
 
-        if not db.session.get(Fornecedor, id_fornecedor):
+        if not Fornecedor.query.get(id_fornecedor):
             return jsonify({"erro": "Fornecedor não encontrado."}), 404
 
         # O mesmo nome é permitido para fornecedores diferentes.
@@ -496,7 +436,7 @@ def atualizar_farmaco(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    farmaco = db.session.get(Farmaco, id)
+    farmaco = Farmaco.query.get(id)
     if not farmaco:
         return jsonify({"erro": "Fármaco não encontrado."}), 404
 
@@ -513,7 +453,7 @@ def atualizar_farmaco(id):
         except (TypeError, ValueError):
             return jsonify({"erro": "Fornecedor inválido."}), 400
 
-        if not db.session.get(Fornecedor, id_fornecedor):
+        if not Fornecedor.query.get(id_fornecedor):
             return jsonify({"erro": "Fornecedor não encontrado."}), 404
 
         farmaco_existente = Farmaco.query.filter(
@@ -548,7 +488,7 @@ def excluir_farmaco(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    farmaco = db.session.get(Farmaco, id)
+    farmaco = Farmaco.query.get(id)
     if not farmaco:
         return jsonify({"erro": "Fármaco não encontrado."}), 404
 
@@ -575,7 +515,7 @@ def alterar_status_farmaco(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    farmaco = db.session.get(Farmaco, id)
+    farmaco = Farmaco.query.get(id)
     if not farmaco:
         return jsonify({"erro": "Fármaco não encontrado."}), 404
 
@@ -620,7 +560,7 @@ def criar_lote():
         return jsonify({"erro": "A validade não pode ser anterior à fabricação."}), 400
 
     try:
-        farmaco = db.session.get(Farmaco, id_farmaco)
+        farmaco = Farmaco.query.get(id_farmaco)
         if not farmaco:
             return jsonify({"erro": "Fármaco não encontrado."}), 404
         if not farmaco.status:
@@ -674,7 +614,7 @@ def listar_lotes():
         resultado = [{
             "id": lote.id,
             "id_farmaco": lote.id_farmaco,
-            "farmaco": db.session.get(Farmaco, lote.id_farmaco).nome,
+            "farmaco": Farmaco.query.get(lote.id_farmaco).nome,
             "numero_lote": lote.numero_lote,
             "data_fabricacao": lote.data_fabricacao.isoformat(),
             "data_validade": lote.data_validade.isoformat(),
@@ -700,7 +640,7 @@ def atualizar_lote(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    lote = db.session.get(Lote, id)
+    lote = Lote.query.get(id)
     if not lote:
         return jsonify({"erro": "Lote não encontrado."}), 404
 
@@ -727,7 +667,7 @@ def atualizar_lote(id):
         return jsonify({"erro": "A validade não pode ser anterior à fabricação."}), 400
 
     try:
-        if not db.session.get(Farmaco, id_farmaco):
+        if not Farmaco.query.get(id_farmaco):
             return jsonify({"erro": "Fármaco não encontrado."}), 404
 
         lote_existente = Lote.query.filter(
@@ -761,7 +701,7 @@ def excluir_lote(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    lote = db.session.get(Lote, id)
+    lote = Lote.query.get(id)
     if not lote:
         return jsonify({"erro": "Lote não encontrado."}), 404
 
@@ -786,7 +726,7 @@ def alterar_status_lote(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    lote = db.session.get(Lote, id)
+    lote = Lote.query.get(id)
     if not lote:
         return jsonify({"erro": "Lote não encontrado."}), 404
 
@@ -866,18 +806,11 @@ def criar_movimentacao():
     if tipo not in ("entrada", "saída", "saida") or quantidade <= 0:
         return jsonify({"erro": "Informe o tipo e uma quantidade maior que zero."}), 400
 
-    lote = Lote.query.filter_by(id=id_lote).with_for_update().first()
+    lote = Lote.query.get(id_lote)
     if not lote:
         return jsonify({"erro": "Lote não encontrado."}), 404
     if not lote.status:
         return jsonify({"erro": "Não é possível movimentar um lote inativo."}), 409
-
-    if lote.data_fabricacao > date.today() or lote.data_validade < date.today():
-        return jsonify({"erro": "Não é possível movimentar um lote fora da validade."}), 409
-    farmaco = db.session.get(Farmaco, lote.id_farmaco)
-    fornecedor = db.session.get(Fornecedor, farmaco.id_fornecedor)
-    if not farmaco.status or not fornecedor.status:
-        return jsonify({"erro": "Fármaco ou fornecedor inativo."}), 409
 
     quantidade_anterior = lote.quantidade
     if tipo == "entrada":
@@ -924,7 +857,7 @@ def atualizar_movimentacao(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    movimentacao = Movimentacao.query.filter_by(id=id).with_for_update().first()
+    movimentacao = Movimentacao.query.get(id)
     if not movimentacao:
         return jsonify({"erro": "Movimentação não encontrada."}), 404
 
@@ -941,20 +874,11 @@ def atualizar_movimentacao(id):
     if tipo not in ("entrada", "saída", "saida") or quantidade <= 0:
         return jsonify({"erro": "Informe o tipo e uma quantidade maior que zero."}), 400
 
-    # Ordem fixa dos bloqueios reduz a possibilidade de deadlocks entre lotes.
-    lotes_bloqueados = {lote.id: lote for lote in Lote.query.filter(
-        Lote.id.in_([id_lote, movimentacao.id_lote])
-    ).order_by(Lote.id).with_for_update().all()}
-    novo_lote = lotes_bloqueados.get(id_lote)
+    novo_lote = Lote.query.get(id_lote)
     if not novo_lote:
         return jsonify({"erro": "Lote não encontrado."}), 404
-    if not novo_lote.status or novo_lote.data_fabricacao > date.today() or novo_lote.data_validade < date.today():
-        return jsonify({"erro": "O lote precisa estar ativo e dentro da validade."}), 409
-    farmaco = db.session.get(Farmaco, novo_lote.id_farmaco)
-    fornecedor = db.session.get(Fornecedor, farmaco.id_fornecedor)
-    if not farmaco.status or not fornecedor.status:
-        return jsonify({"erro": "Fármaco ou fornecedor inativo."}), 409
-    lote_antigo = lotes_bloqueados[movimentacao.id_lote]
+
+    lote_antigo = Lote.query.get(movimentacao.id_lote)
     saldos = {
         lote_antigo.id: lote_antigo.quantidade,
         novo_lote.id: novo_lote.quantidade
@@ -1006,11 +930,11 @@ def excluir_movimentacao(id):
     if not claims["administrador"]:
         return jsonify({"erro": "Acesso negado!"}), 403
 
-    movimentacao = Movimentacao.query.filter_by(id=id).with_for_update().first()
+    movimentacao = Movimentacao.query.get(id)
     if not movimentacao:
         return jsonify({"erro": "Movimentação não encontrada."}), 404
 
-    lote = Lote.query.filter_by(id=movimentacao.id_lote).with_for_update().first()
+    lote = Lote.query.get(movimentacao.id_lote)
     if movimentacao.tipo_movimentacao == "Entrada":
         nova_quantidade = lote.quantidade - movimentacao.quantidade
     else:
@@ -1050,7 +974,7 @@ def excluir_movimentacao(id):
 #         # Verifica se o fornecedor já existe no banco de dados.
 #         if Fornecedor.query.filter_by(cnpj=cnpj).first():
 #             return jsonify({"error": "Fornecedor já existe."}), 409
-
+        
 #         else:
 #             novo_fornecedor = Fornecedor(
 #                 nome=nome,
@@ -1066,7 +990,7 @@ def excluir_movimentacao(id):
 #         return jsonify({"error": "Ocorreu um erro ao criar o fornecedor."}), 500
 #_______________________________________________________________
 
-
+    
 
 # @app.route("/api/fornecedores", methods=["GET"])
 # @jwt_required()
@@ -1075,7 +999,7 @@ def excluir_movimentacao(id):
 #     claims = get_jwt()
 #     if not claims["administrador"]:
 #         return jsonify({"erro": "Acesso negado!"}), 403
-
+    
 #     #tenta buscar os fornecedores no banco de dados.
 #     try:
 #         # Busca todos os fornecedores ativos no banco de dados.
@@ -1091,6 +1015,6 @@ def excluir_movimentacao(id):
 #         return jsonify(resultado), 200
 #     except Exception as e:
 #         return jsonify({"error": "Ocorreu um erro ao buscar os fornecedores."}), 500
-
+    
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=False)
+    app.run(debug=True)
