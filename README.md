@@ -1,6 +1,7 @@
 # SIGIR UNESP · Controle de estoque de fármacos
 
-> O `app.py` foi restaurado ao original do ZIP por solicitação do autor. Ele volta a usar MySQL local (`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_NAME` e `JWT_SECRET_KEY` no `.env`) e inicia com `python app.py`. As instruções abaixo sobre Supabase, comandos administrativos e execução de testes descrevem a versão anterior do backend e não se aplicam ao arquivo restaurado. O dashboard visual foi mantido, mas os gráficos avançados precisam de adaptação ao endpoint original, que retorna apenas três contagens. O backend original não serve as páginas HTML.
+> **Novo painel:** o design do projeto Ventek foi adaptado em [`frontend/`](frontend/README.md), com React e Tailwind. O `app.py` segue original com MySQL local. Execute o Flask na porta 5000 e o frontend na porta 3000 seguindo o guia. O novo painel calcula os gráficos a partir das rotas existentes; a observação antiga sobre incompatibilidade dos gráficos se aplica somente aos templates HTML anteriores.
+
 
 Projeto de TCC para gerenciamento do estoque da Medicina Nuclear da UNESP. Mantém Python/Flask, modelos SQLAlchemy, HTML, CSS e JavaScript do projeto original. Banco de produção: **PostgreSQL no Supabase**. SQLite serve apenas para desenvolvimento e testes sem credenciais externas.
 

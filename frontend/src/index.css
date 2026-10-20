@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+}
+
+/* Custom scrollbar for clean UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Smooth pulse glow animations */
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+.animate-soft-pulse {
+  animation: softPulse 3s ease-in-out infinite;
+}
+
+/* Glass card styling matching Sirion reference */
+.sirion-card {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(241, 245, 249, 1);
+  box-shadow:
+    0 4px 20px -2px rgba(148, 163, 184, 0.12),
+    0 2px 6px -1px rgba(148, 163, 184, 0.08);
+}
+
+.dark .sirion-card {
+  background-color: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  }
+  button,
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  :focus-visible {
+    outline: 3px solid #60a5fa;
+    outline-offset: 3px;
+  }
+}
+@layer components {
+  .section-title {
+    @apply text-base font-black text-slate-900 tracking-tight;
+  }
+  .caption {
+    @apply text-xs font-semibold text-slate-400 leading-relaxed;
+  }
+  .icon-button {
+    @apply p-2.5 rounded-xl bg-slate-50 text-slate-500 border border-slate-200/60 hover:bg-slate-100 transition-colors;
+  }
+  .icon-box {
+    @apply w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0;
+  }
+  .primary-button {
+    @apply inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-5 py-3 text-xs font-extrabold shadow-md shadow-blue-500/15 transition-colors;
+  }
+  .secondary-button {
+    @apply inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl px-4 py-2.5 text-xs font-bold border border-slate-200/80 transition-colors;
+  }
+  .text-link {
+    @apply inline-flex items-center gap-2 text-xs font-extrabold text-blue-600 hover:text-blue-800;
+  }
+  .summary-chip {
+    @apply flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-slate-200/80;
+  }
+  .summary-chip strong {
+    @apply block text-xs font-extrabold;
+  }
+  .summary-chip small {
+    @apply block text-[10px] text-slate-400 font-bold mt-1;
+  }
+  .badge {
+    @apply inline-flex items-center text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap;
+  }
+  .badge.warning {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+  .badge.danger {
+    @apply bg-rose-50 text-rose-600 border-rose-100;
+  }
+  .field-label {
+    @apply flex flex-col gap-2 text-xs font-extrabold text-slate-600;
+  }
+  .form-input {
+    @apply block w-full px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm font-medium;
+  }
+  .error-message {
+    @apply rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-700 leading-relaxed;
+  }
+  .notice {
+    @apply rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-700;
+  }
+  .modal-card {
+    @apply rounded-3xl border border-slate-200 bg-white text-slate-800 p-6 sm:p-8 shadow-2xl w-[calc(100%-2rem)] max-w-lg max-h-[90vh] overflow-auto m-auto;
+  }
+  .modal-card::backdrop {
+    background: rgb(15 23 42 / 0.45);
+    backdrop-filter: blur(4px);
+  }
+  .table-scroll {
+    @apply overflow-x-auto;
+  }
+  .table-scroll table {
+    @apply w-full text-left text-xs;
+  }
+  .table-scroll th {
+    @apply px-5 py-4 text-[10px] font-extrabold uppercase tracking-wider bg-slate-50 text-slate-400 whitespace-nowrap;
+  }
+  .table-scroll td {
+    @apply px-5 py-4 border-t border-slate-100 text-slate-600 font-semibold whitespace-nowrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
