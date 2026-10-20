@@ -13,4 +13,3 @@ class Usuario(db.Model):
     senha = db.Column(db.String(220), nullable=False)
     administrador = db.Column(db.Boolean, nullable=False, default=False)
     criado_em = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    

@@ -9,5 +9,5 @@ class Fornecedor(db.Model):
     telefone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     status = db.Column(db.Boolean, nullable=False, default=True)
-    
+
     farmacos = db.relationship("Farmaco", backref="fornecedor")

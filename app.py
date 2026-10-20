@@ -157,7 +157,7 @@ def tela_login():
 
         #Login incorreto.
         return jsonify({"error": "Email ou senha inválidos."}), 401
-    
+
     else:
 
         # Login correto.
@@ -232,7 +232,7 @@ def criar_fornecedor():
         # Verifica se o fornecedor já existe no banco de dados.
         if Fornecedor.query.filter_by(cnpj=cnpj).first():
             return jsonify({"error": "Fornecedor já existe."}), 409
-        
+
         else:
             novo_fornecedor = Fornecedor(
                 nome=nome,
@@ -1050,7 +1050,7 @@ def excluir_movimentacao(id):
 #         # Verifica se o fornecedor já existe no banco de dados.
 #         if Fornecedor.query.filter_by(cnpj=cnpj).first():
 #             return jsonify({"error": "Fornecedor já existe."}), 409
-        
+
 #         else:
 #             novo_fornecedor = Fornecedor(
 #                 nome=nome,
@@ -1066,7 +1066,7 @@ def excluir_movimentacao(id):
 #         return jsonify({"error": "Ocorreu um erro ao criar o fornecedor."}), 500
 #_______________________________________________________________
 
-    
+
 
 # @app.route("/api/fornecedores", methods=["GET"])
 # @jwt_required()
@@ -1075,7 +1075,7 @@ def excluir_movimentacao(id):
 #     claims = get_jwt()
 #     if not claims["administrador"]:
 #         return jsonify({"erro": "Acesso negado!"}), 403
-    
+
 #     #tenta buscar os fornecedores no banco de dados.
 #     try:
 #         # Busca todos os fornecedores ativos no banco de dados.
@@ -1091,6 +1091,6 @@ def excluir_movimentacao(id):
 #         return jsonify(resultado), 200
 #     except Exception as e:
 #         return jsonify({"error": "Ocorreu um erro ao buscar os fornecedores."}), 500
-    
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=False)
