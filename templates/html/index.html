@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SIGIR UNESP</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial;
+        }
+
+        body.login-body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #002c5c;
+            padding: 20px;
+        }
+
+        .login-card {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-logo {
+            max-width: 180px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            border-color: #097ce9;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(9, 124, 233, 0.1);
+        }
+
+        #login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #097ce9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        #login-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #mensagem {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        p {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #718096;
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <div id="login-screen">
+        <div class="login-card">
+
+            <img src="/static/images/logo_unesp.png"
+                alt="UNESP"
+                class="login-logo"
+                style="filter: brightness(0) saturate(100%) invert(18%) sepia(50%) saturate(1915%) hue-rotate(189deg) brightness(92%) contrast(105%);">
+
+            <h2 style="margin-bottom: 25px; color:#002c5c;">
+                SIGIR UNESP
+            </h2>
+
+            <form id="login-form">
+
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Digite seu email">
+                </div>
+
+                <div class="input-group">
+                    <label for="senha">Senha</label>
+                    <input
+                        type="password"
+                        id="senha"
+                        placeholder="Digite sua senha">
+                </div>
+
+                <button id="login-btn" type="submit">
+                    Entrar
+                </button>
+
+                <div id="mensagem"></div>
+
+            </form>
+
+            <p>Acesso exclusivo para funcionários.</p>
+
+        </div>
+    </div>
+
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/login.js"></script>
+
+</body>
+
+</html>

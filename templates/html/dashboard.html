@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <title>Visão geral · SIGIR UNESP</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+
+<body class="dashboard-layout">
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+
+    <header>
+
+        <img src="/static/images/logo_unesp.png" alt="UNESP">
+
+        <a href="dashboard.html" class="nav-link active-page">
+            Dashboard
+        </a>
+
+        <a href="estoque.html" class="nav-link">
+            Estoque (Lotes)
+        </a>
+
+        <a href="movimentacoes.html" class="nav-link">
+            Movimentações
+        </a>
+
+        <a href="farmacos.html" class="nav-link">
+            Fármacos
+        </a>
+
+        <a href="fornecedores.html" class="nav-link">
+            Fornecedores
+        </a>
+
+        <button class="sair" onclick="fazer_logout()">
+            Sair
+        </button>
+
+    </header>
+
+
+    <div class="content-wrapper">
+
+        <main class="overview">
+            <div class="overview-heading">
+                <div><p class="eyebrow">SIGIR · MEDICINA NUCLEAR</p><h1>Visão geral do estoque</h1>
+                <p class="muted">Disponibilidade, validade e movimentações em um só lugar.</p></div>
+                <div class="toolbar"><label for="periodo">Período</label>
+                    <select id="periodo"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select>
+                    <button class="btn btn-primary" id="atualizar">Atualizar</button>
+                </div>
+            </div>
+            <p id="atualizado" class="muted" aria-live="polite">Carregando indicadores…</p>
+            <div id="mensagem" role="alert"></div>
+            <section class="metrics" aria-label="Indicadores de estoque">
+                <article class="metric"><span>Unidades disponíveis</span><strong id="unidades">—</strong><small>Em lotes vigentes, sem itens vencidos</small></article>
+                <article class="metric"><span>Lotes ativos</span><strong id="total-lotes">—</strong><small id="resumo-validade">Inclui lotes vencidos para acompanhamento</small></article>
+                <article class="metric"><span>Fármacos cadastrados</span><strong id="total-farmacos">—</strong><small id="fornecedores">—</small></article>
+                <article class="metric"><span>Movimentações registradas</span><strong id="total-movimentacoes">—</strong><small id="resumo-periodo">Histórico completo</small></article>
+            </section>
+            <section class="analytics-grid">
+                <article class="panel trend-panel"><div class="panel-heading"><div><h2>Fluxo de movimentações</h2><p class="muted">Unidades por dia no período selecionado</p></div><span class="legend"><i class="dot teal"></i>Entradas <i class="dot blue"></i>Saídas</span></div>
+                    <div id="grafico-fluxo" class="trend-chart"></div>
+                    <details><summary>Ver dados do gráfico</summary><div class="table-scroll"><table><thead><tr><th>Data</th><th>Entradas</th><th>Saídas</th></tr></thead><tbody id="dados-fluxo"></tbody></table></div></details>
+                </article>
+                <article class="panel"><h2>Saúde dos lotes</h2><p class="muted">Validade dos lotes ativos</p><div id="grafico-validade" class="validity-chart"></div><a class="text-link" href="/estoque.html">Consultar estoque →</a></article>
+                <article class="panel"><h2>Disponibilidade por fármaco</h2><p class="muted">Até 8 itens com maior quantidade vigente</p><div id="grafico-estoque" class="stock-chart"></div></article>
+                <article class="panel"><div class="panel-heading"><div><h2>Atenção à validade</h2><p class="muted">Lotes com saldo, vencidos ou a vencer em até 10 dias</p></div><span id="alerta-contagem" class="count-badge">—</span></div><div id="alertas" class="alerts-list"></div></article>
+            </section>
+            <section class="panel recent-panel"><div class="panel-heading"><div><h2>Últimas movimentações</h2><p class="muted">As 6 mais recentes no período selecionado</p></div><div class="toolbar"><button id="exportar" class="btn btn-outline" disabled>Exportar CSV</button><a href="/movimentacoes.html" class="text-link">Ver histórico →</a></div></div>
+                <div class="table-scroll"><table><thead><tr><th>Fármaco / lote</th><th>Operação</th><th>Quantidade</th><th>Responsável</th><th>Data</th></tr></thead><tbody id="recentes"></tbody></table></div>
+            </section>
+        </main>
+
+
+        <footer>
+            Medicina Nuclear UNESP | Desenvolvido por SESI
+        </footer>
+
+    </div>
+
+
+    <script>
+
+        // Menu Mobile
+        const menuToggle = document.getElementById('menuToggle');
+        const header = document.querySelector('header');
+
+        if (menuToggle && header) {
+
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                header.classList.toggle('open');
+            });
+
+            // Fecha o menu ao clicar fora dele no mobile
+            document.addEventListener('click', (e) => {
+
+                if (
+                    header.classList.contains('open')
+                    &&
+                    !header.contains(e.target)
+                    &&
+                    e.target !== menuToggle
+                ) {
+
+                    header.classList.remove('open');
+
+                }
+
+            });
+
+        }
+
+    </script>
+
+
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+
+</body>
+
+</html>

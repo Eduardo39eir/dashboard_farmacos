@@ -1,0 +1,39 @@
+:root { --navy:#102c4b; --teal:#087f78; --blue:#3675dc; --muted:#60738a; --border:#e3eaf2; }
+.overview {max-width:1600px; margin:auto; padding:36px; color:var(--navy)}
+.overview-heading,.panel-heading {display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
+.overview h1 {font-size:30px;letter-spacing:-.8px;color:var(--navy);margin:6px 0 10px}
+.eyebrow {font-size:11px;letter-spacing:2px;font-weight:700;color:var(--teal)}
+.muted {color:var(--muted);font-size:13px;line-height:1.6}
+#atualizado {margin-bottom:22px;font-size:12px}
+.toolbar {display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+.toolbar select {background:white;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--navy)}
+.metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:26px}
+.metric,.panel {background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 4px 20px #17314f04}
+.metric {padding:22px;display:flex;flex-direction:column;gap:12px;border-top:3px solid var(--teal)}
+.metric span {font-size:13px;font-weight:600;color:var(--muted)}
+.metric strong {font-size:34px;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.metric small {font-size:11px;color:var(--muted);line-height:1.6}
+.analytics-grid {display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
+.panel {padding:24px;min-width:0}.panel h2 {font-size:16px;margin-bottom:6px;font-weight:650;color:var(--navy)}
+.legend {display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted);white-space:nowrap}
+.dot {display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}.teal {background:var(--teal)}.blue{background:var(--blue)}
+.trend-chart {min-height:210px;margin-top:24px}.trend-chart svg {display:block;width:100%;height:auto;overflow:visible}
+.trend-chart text {font-size:10px;fill:var(--muted)}
+details {font-size:12px;margin-top:16px;color:var(--muted)}summary{cursor:pointer}
+.table-scroll{overflow-x:auto} .table-scroll table{width:100%;border-collapse:collapse;font-size:13px}
+.table-scroll th{background:#f7f9fc;text-align:left;color:var(--muted);font-weight:600}
+.table-scroll td,.table-scroll th{padding:14px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.bar-row{margin:20px 0}.bar-label{display:flex;justify-content:space-between;gap:15px;margin-bottom:8px;font-size:12px}
+.bar-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track {height:9px;background:#eef3f8;border-radius:6px;overflow:hidden}.bar-fill{height:100%;background:var(--teal);border-radius:6px}
+.text-link{display:inline-block;color:var(--teal);font-size:12px;font-weight:650;text-decoration:none;margin-top:10px}
+.count-badge{background:#fff3dd;color:#946000;border-radius:20px;padding:6px 11px;font-size:12px}
+.alerts-list{max-height:300px;overflow:auto}.alert-item{border-bottom:1px solid var(--border);padding:14px 0;display:flex;justify-content:space-between;gap:14px;font-size:12px}
+.alert-item strong{display:block;margin-bottom:5px}.alert-item small{color:var(--muted)}
+.status-pill{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;background:#fff3dd;color:#946000;white-space:nowrap}
+.status-pill.danger{background:#feecee;color:#af3146}.status-pill.success{background:#e2f5ef;color:#08755d}.status-pill.info{background:#eaf1ff;color:#306ac8}
+.empty-state{padding:40px 12px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+.recent-panel{margin-top:22px}button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #42b1c0;outline-offset:3px}
+@media(max-width:1200px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-heading{align-items:flex-start;flex-direction:column}.analytics-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.overview{padding:70px 16px 24px}.metrics{gap:10px}.metric{padding:15px}.metric strong{font-size:28px}.overview h1{font-size:24px}.panel{padding:18px}.panel-heading{align-items:flex-start;flex-direction:column}.toolbar{gap:8px}.analytics-grid{gap:14px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
