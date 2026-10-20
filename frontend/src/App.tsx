@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { Activity, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 import { Dados, Tab } from "./types";
-import { api, carregarDados, diasValidade } from "./lib/api";
+import { api, carregarDados, diasValidade, exportarCsv } from "./lib/api";
 import { Header } from "./components/Header";
 import { Dashboard } from "./components/Dashboard";
 import { RecordsView } from "./components/RecordsView";
@@ -66,6 +66,9 @@ export default function App() {
           ) : (
             <>
               <Header
+                exportar={() => {
+                  if (dados) exportarCsv(dados.movimentacoes, "movimentacoes");
+                }}
                 ativa={aba}
                 navegar={navegar}
                 sair={sair}
@@ -86,32 +89,19 @@ export default function App() {
                   );
                 }}
               />
-              <div className="flex flex-wrap gap-3 items-center justify-between px-1">
-                <p className="caption" aria-live="polite">
-                  {carregando
-                    ? "Atualizando informações…"
-                    : atualizado
-                      ? `Última atualização às ${atualizado} · API local`
-                      : "Conectando ao banco local…"}
-                </p>
-                <button
-                  className="secondary-button"
-                  disabled={carregando}
-                  onClick={() => void recarregar().catch(() => {})}
-                >
-                  <RefreshCw
-                    size={14}
-                    className={carregando ? "animate-spin" : ""}
-                  />
-                  Atualizar dados
-                </button>
-              </div>
               {erro && (
                 <div
                   role="alert"
                   className="error-message flex items-center gap-3"
                 >
                   <AlertTriangle size={18} />
+                  <button
+                    className="secondary-button"
+                    disabled={carregando}
+                    onClick={() => void recarregar().catch(() => {})}
+                  >
+                    Tentar novamente
+                  </button>
                   <span>
                     {erro}
                     {dados
@@ -142,10 +132,9 @@ export default function App() {
                   <AnimatePresence mode="wait">
                     <motion.main
                       key={aba}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2 }}
+                      initial={false}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                     >
                       {aba === "dashboard" ? (
                         <Dashboard dados={dados} navegar={navegar} />
@@ -160,10 +149,6 @@ export default function App() {
                   </AnimatePresence>
                 )
               )}
-              <footer className="flex flex-wrap justify-between gap-2 py-5 border-t border-slate-200 text-[10px] font-semibold text-slate-400">
-                <span>SIGIR · Medicina Nuclear UNESP</span>
-                <span>Controle de estoque de fármacos</span>
-              </footer>
             </>
           )}
         </div>

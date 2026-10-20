@@ -1,11 +1,11 @@
 import React from "react";
 import { MetricCardItem } from "../types";
 import {
-  Package,
-  Pill,
-  Truck,
-  ArrowLeftRight,
-  Activity,
+  CalendarCheck,
+  Users,
+  FileSignature,
+  HeartHandshake,
+  TrendingUp,
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
@@ -18,15 +18,15 @@ export const QuickMetrics: React.FC<QuickMetricsProps> = ({ metrics }) => {
   const getIcon = (id: string) => {
     switch (id) {
       case "1":
-        return <Package className="w-6 h-6 text-blue-600" />;
+        return <CalendarCheck className="w-6 h-6 text-blue-600" />;
       case "2":
-        return <Pill className="w-6 h-6 text-indigo-600" />;
+        return <Users className="w-6 h-6 text-indigo-600" />;
       case "3":
-        return <Truck className="w-6 h-6 text-amber-600" />;
+        return <FileSignature className="w-6 h-6 text-amber-600" />;
       case "4":
-        return <ArrowLeftRight className="w-6 h-6 text-emerald-600" />;
+        return <HeartHandshake className="w-6 h-6 text-emerald-600" />;
       default:
-        return <Package className="w-6 h-6 text-blue-600" />;
+        return <CalendarCheck className="w-6 h-6 text-blue-600" />;
     }
   };
 
@@ -74,10 +74,10 @@ export const QuickMetrics: React.FC<QuickMetricsProps> = ({ metrics }) => {
 
           {/* Bottom Row: Sub-info Footer */}
           <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-slate-400">
-            <span>{card.context}</span>
+            <span>Visão Operacional</span>
             <div className="flex items-center gap-1 text-emerald-600 font-bold">
-              <Activity className="w-4 h-4 text-emerald-500" />
-              <span>Estoque</span>
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <span>Ativo</span>
             </div>
           </div>
         </div>

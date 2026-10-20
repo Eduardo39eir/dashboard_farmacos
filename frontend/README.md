@@ -24,13 +24,13 @@ O Vite encaminha `/api` para `http://127.0.0.1:5000`; não é necessário altera
 
 - Login, expiração de sessão e saída local do painel.
 - Dashboard calculado a partir de `/api/lotes`, `/api/farmacos`, `/api/fornecedores` e `/api/movimentacoes` do backend original.
-- Filtros de 7, 30 e 90 dias, entradas/saídas, gráfico com tooltip, tabela acessível e exportação CSV.
-- Distribuição de validade, card de atenção e lista de prioridades, sem números simulados.
+- Filtros de 7, 30 e 90 dias, entradas/saídas, gráfico com tooltip e exportação CSV dos valores do período.
+- Calendário de validade por dia e lista de lotes pendentes de atenção, sem números simulados.
 - Telas de fornecedores, fármacos, lotes e movimentações com busca, paginação, criação, edição, exclusão/inativação e CSV dos resultados da busca.
 - Confirmação com senha para inativar fornecedores; erros e validações retornados pela API são mostrados no formulário.
 - Layout responsivo, menu móvel, modais nativos com foco e animações que respeitam movimento reduzido.
 
-A disponibilidade exclui lotes vencidos ou ainda não fabricados e dependências inativas. O limite de alerta é de 10 dias, incluindo o dia do vencimento. O período altera o gráfico e as últimas movimentações; os cards superiores são totais. A data é calculada no navegador. A tela recebe listas completas da API, portanto busca, paginação e agregações são locais; grandes volumes poderão exigir paginação/agregação no backend em outra tarefa.
+A disponibilidade exclui lotes vencidos ou ainda não fabricados e dependências inativas. O limite de alerta é de 10 dias, incluindo o dia do vencimento. O período altera o gráfico; os cards superiores são totais e o calendário mostra os vencimentos do dia selecionado. A data é calculada no navegador. A tela recebe listas completas da API, portanto busca, paginação e agregações são locais; grandes volumes poderão exigir paginação/agregação no backend em outra tarefa.
 
 ## Verificar
 
@@ -49,3 +49,7 @@ O teste de navegador verifica as rotas reais do `app.py` original com um banco S
 A porta 5001 é reservada para a API de teste. Não aponte esse teste para dados pessoais. Os testes antigos em `tests/` pertencem ao backend anterior e continuam fora desta validação. A conexão com seu MySQL local precisa ser verificada no seu computador.
 
 `npm run build` produz `dist/`. `npm run preview` permite verificar o build local com o mesmo proxy da API. Publicação em produção requer um servidor estático e encaminhamento `/api` ao Flask; não foi realizada nesta tarefa.
+
+## Fidelidade ao projeto enviado
+
+A tela inicial reutiliza diretamente a estrutura e as classes de `Header`, `PsychologistGreetingHeader`, `PsychologistQuickMetrics`, `PsychologistClinicalOverviewChart`, `PsychologistTodayScheduleCard`, `PsychologistProntuariosPendingCard` e `PatientAvatar` do ZIP. Mantém os quatro cards, o gráfico com resumos e pendências na coluna de 8/12, o calendário/lista na coluna de 4/12, a seleção animada do menu e os parâmetros de animação Motion. Foram trocados o conteúdo e a fonte de dados para o SIGIR. O card azul grande, o gráfico de rosca e a faixa adicional de atualização da adaptação anterior foram removidos.
