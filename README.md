@@ -1,69 +1,59 @@
-# SIGIR UNESP · Controle de estoque de fármacos
+# SIGIR · Medicina Nuclear UNESP
 
-> **Novo painel:** o design do projeto Ventek foi adaptado em [`frontend/`](frontend/README.md), com React e Tailwind. O `app.py` segue original com MySQL local. Execute o Flask na porta 5000 e o frontend na porta 3000 seguindo o guia. O novo painel calcula os gráficos a partir das rotas existentes; a observação antiga sobre incompatibilidade dos gráficos se aplica somente aos templates HTML anteriores.
+Controle de estoque de fármacos com Flask, SQLAlchemy e MySQL local. O painel segue a referência visual Youcare: superfície central clara, menu horizontal, cards compactos, destaque azul e gráficos suaves.
 
+## Executar no seu computador
 
-Projeto de TCC para gerenciamento do estoque da Medicina Nuclear da UNESP. Mantém Python/Flask, modelos SQLAlchemy, HTML, CSS e JavaScript do projeto original. Banco de produção: **PostgreSQL no Supabase**. SQLite serve apenas para desenvolvimento e testes sem credenciais externas.
-
-## Executar localmente
-
-Requer Python 3.12 ou superior. No diretório do projeto:
+1. Prepare o ambiente Python e instale as dependências:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt -c requirements.lock
-cp .env.example .env
+python -m venv .venv
+# Ative a .venv conforme seu sistema.
+pip install -r requirements.txt -c requirements.lock
 ```
 
-Edite `.env`: gere `JWT_SECRET_KEY` com `python -c "import secrets; print(secrets.token_hex(32))"`. Para testar sem Supabase use `DATABASE_URL=sqlite:///desenvolvimento.db`. Para Supabase siga [o guia](docs/SUPABASE.md).
+2. Copie `.env.example` para `.env` e configure `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_NAME` e `JWT_SECRET_KEY`. O banco MySQL deve existir e estar disponível.
+3. Inicie:
 
 ```bash
-flask --app app init-db
-flask --app app create-admin
-flask --app app run --host=0.0.0.0 --port=5000
+python run.py
 ```
 
-O comando `create-admin` solicita nome, e-mail e senha oculta com confirmação (mínimo de 12 caracteres). Não há usuário ou senha padrão. Abra a raiz do servidor para entrar. As páginas e a API são servidas pelo Flask; não use Live Server nem abra os arquivos HTML diretamente.
+4. Abra **http://localhost:5000/** e faça login com os usuários do seu banco.
 
-Em produção Linux, instale `requirements.txt` com `-c requirements.lock` e execute `gunicorn --bind 0.0.0.0:5000 --workers 2 --access-logfile - app:app` atrás de um proxy HTTPS. A configuração de infraestrutura e a publicação da aplicação são etapas separadas. `GET /health` verifica a conexão do banco; não testa autenticação ou existência das tabelas.
+**O `app.py` original permanece intacto.** `run.py` acrescenta somente o serviço das páginas do painel ao backend existente. Ele importa o original, que mantém sua inicialização de tabelas e usuário inicial.
 
-## Funcionalidades
+A interface compilada está em `static/painel/`, incluída no repositório; você não precisa iniciar Node para usar o sistema. Todos os caminhos antigos (`dashboard.html`, `templates/html/dashboard.html`, `templates/html/estoque.html` etc.) agora carregam esta mesma interface. Os templates antigos com menu lateral foram substituídos.
 
-- Login JWT com validade de 8 horas, controle de acesso administrativo e tratamento de sessão expirada.
-- Cadastro/edição de fornecedores, fármacos e lotes; inativação de itens.
-- Entradas e saídas com limites de saldo/capacidade; edição e exclusão revertem o saldo na mesma transação. Bloqueios de linhas no PostgreSQL protegem movimentações concorrentes.
-- Dashboard responsivo: unidades disponíveis, lotes, fármacos e histórico total.
-- Gráfico de entradas/saídas por dia com filtros de 7, 30 e 90 dias e tabela acessível.
-- Quantidade disponível por fármaco, distribuição de validade e alertas de lotes com saldo próximos do vencimento ou vencidos.
-- Últimas movimentações do período e exportação CSV da série diária exibida.
+Se ainda usar Live Server nas portas 5500/5501, as requisições da interface serão encaminhadas ao Flask da mesma máquina na porta 5000. A execução recomendada é `python run.py`, com interface e API no mesmo endereço. Não abra os arquivos como `file://`.
 
-Os indicadores de estoque consideram lotes já fabricados com lote, fármaco e fornecedor ativos. Unidades disponíveis excluem vencidos; a distribuição de validade inclui vencidos para acompanhamento. A data de validade é inclusiva e o alerta usa o limite original de 10 dias. Os dias são calculados pelo relógio do servidor. Fármacos cadastrados e histórico de movimentações nos cards são contagens totais; o filtro altera o fluxo e as últimas movimentações.
-
-## Testar
+## Editar o frontend
 
 ```bash
-source .venv/bin/activate
-pytest -q
+cd frontend
+npm ci
+npm run dev
 ```
 
-Os testes usam SQLite em memória e nunca acessam o banco configurado no `.env`. Cobrem permissões, login, cadastros, movimentações/reversões, dashboard e comandos administrativos. Com Chromium instalado, também verificam navegação, gráficos, filtros, CSV e layout móvel em navegador real. Sem Chromium, esse teste aparece explicitamente como ignorado. Instale Chromium pelo gerenciador de pacotes do sistema para executá-lo.
+O Vite informa o endereço de desenvolvimento, terminado em `/static/painel/`, e encaminha `/api` ao Flask na porta 5000. Para gerar a interface usada pelo Python:
 
-## Organização
+```bash
+npm run build
+```
 
-- `app.py`: configuração, rotas e comandos administrativos.
-- `models/`: modelos originais de usuário, fornecedor, fármaco, lote e movimentação.
-- `dashboard_service.py`: agregações dos indicadores.
-- `templates/html/`, `static/css/`, `static/js/`: interface organizada por página.
-- `docs/SUPABASE.md`: conexão e inicialização do PostgreSQL.
-- `scripts/setup.sh`: preparação repetível do ambiente Codex em `/workspace/dashboard_farmacos`.
+O build atualiza `static/painel/` e os seis templates de entrada automaticamente. Não edite esses arquivos gerados manualmente. Consulte [frontend/README.md](frontend/README.md).
 
-A importação utiliza a pasta principal `TCC/` do ZIP, que contém os fluxos mais completos. A cópia antiga `TCC/TCC/`, o ambiente virtual Windows, arquivos `.env` e configurações pessoais não são publicados. O ZIP não contém um dump dos dados do MySQL; os registros existentes não são transferidos automaticamente.
+## Fluxos disponíveis
 
-## Limites desta versão
+- Login e sessão administrativa.
+- Fornecedores e fármacos: cadastro, edição, busca e inativação.
+- Lotes: fabricação, validade, quantidade, capacidade e controle de estoque.
+- Entradas e saídas, edição e exclusão com reversão do saldo pelo backend original.
+- Gráficos de fluxo e barras, filtro de período/operação, próximos vencimentos, informações do estoque e fornecedores.
+- Exportação CSV e layout responsivo.
 
-O login permanece no Flask com a tabela `usuarios`; não usa Supabase Auth. O Supabase hospeda o banco, acessado somente pelo backend. Logout remove o token no navegador; um token copiado continua válido até expirar. Antes de disponibilizar na Internet, configure HTTPS, limitação de tentativas de login, backups e política de expiração/revogação conforme o uso da instituição. Não existe cadastro público nem recuperação de senha nesta versão.
+A disponibilidade exclui lotes vencidos, ainda não fabricados ou com dependências inativas. Alertas consideram lotes com saldo vencidos ou com até 10 dias de validade. A API original é preservada; esta tarefa não migrou dados para Supabase.
 
-## Referências de interface
+## Validação
 
-O dashboard adapta padrões de composição do [UI Arc](https://uiarc.dev/components/): [Metric card](https://uiarc.dev/components/metric-card), [Segmented control](https://uiarc.dev/components/segmented-control), [Donut chart](https://uiarc.dev/components/donut-chart) e [Button](https://uiarc.dev/components/button). A implementação é própria em HTML/CSS/JavaScript, compatível com Flask, sem dependências React ou serviços externos na interface. Inclui seleção de período por teclado, distribuição de validade com legenda textual, estados vazios, carregamento e respeito à preferência de movimento reduzido. Os percentuais do gráfico são arredondados por categoria.
+O build inclui a verificação de TypeScript. O teste em `frontend/tests/` exercita a interface com as rotas reais do backend e SQLite isolado apenas no processo de teste; não acessa o MySQL pessoal. As rotas antigas também são verificadas para impedir que a interface anterior reapareça. Os testes antigos em `tests/` pertencem ao backend anterior e não validam esta versão restaurada.

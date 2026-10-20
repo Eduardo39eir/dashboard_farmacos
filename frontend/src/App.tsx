@@ -10,7 +10,22 @@ export default function App() {
   const [autenticado, setAutenticado] = useState(
     !!localStorage.getItem("token"),
   );
-  const [aba, setAba] = useState<Tab>("dashboard");
+  const [aba, setAba] = useState<Tab>(() => {
+    const nome = window.location.pathname
+      .split("/")
+      .pop()
+      ?.replace(".html", "");
+    return (
+      (
+        {
+          estoque: "lotes",
+          farmacos: "farmacos",
+          fornecedores: "fornecedores",
+          movimentacoes: "movimentacoes",
+        } as Record<string, Tab>
+      )[nome || ""] || "dashboard"
+    );
+  });
   const [dados, setDados] = useState<Dados | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
@@ -53,8 +68,8 @@ export default function App() {
   };
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen bg-slate-50 text-slate-800 p-3 sm:p-5 md:p-8">
-        <div className="max-w-[1600px] w-full mx-auto space-y-6">
+      <div className="youcare-page">
+        <div className="youcare-shell">
           {!autenticado ? (
             <Login
               entrou={() => {

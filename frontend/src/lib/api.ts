@@ -1,8 +1,12 @@
 import { Dados, Registro } from "../types";
+// Live Server antigo: a API continua no Flask da mesma máquina, porta 5000.
+const apiOrigem = ["5500", "5501"].includes(window.location.port)
+  ? `${window.location.protocol}//${window.location.hostname}:5000`
+  : "";
 export async function api(caminho: string, opcoes: RequestInit = {}) {
   let resposta: Response;
   try {
-    resposta = await fetch("/api" + caminho, {
+    resposta = await fetch(apiOrigem + "/api" + caminho, {
       ...opcoes,
       headers: {
         "Content-Type": "application/json",
@@ -17,7 +21,14 @@ export async function api(caminho: string, opcoes: RequestInit = {}) {
       "Não foi possível conectar à API. Verifique se o Flask está executando.",
     );
   }
-  const dados = await resposta.json().catch(() => ({}));
+  if (
+    !(resposta.headers.get("content-type") || "").includes("application/json")
+  ) {
+    throw new Error(
+      "A API não retornou JSON. Inicie python run.py e abra o painel na porta 5000.",
+    );
+  }
+  const dados = await resposta.json();
   if (resposta.status === 401 && caminho !== "/login") {
     localStorage.removeItem("token");
     window.dispatchEvent(new Event("sessao-expirada"));
