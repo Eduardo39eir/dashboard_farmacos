@@ -9,12 +9,17 @@ async function carregar_dashboard() {
     const botao = document.getElementById('atualizar');
     const periodo = document.getElementById('periodo');
     const mensagem = document.getElementById('mensagem');
-    botao.disabled = true;
+    if (botao.getAttribute('aria-busy') === 'true') return;
+    botao.setAttribute('aria-busy', 'true');
+    botao.setAttribute('aria-disabled', 'true');
+    botao.querySelector('.button-label').textContent = 'Atualizando…';
+    const focoPeriodo = periodo.contains(document.activeElement) ? document.activeElement : null;
     periodo.disabled = true;
     mensagem.textContent = '';
+    mensagem.className = '';
     document.querySelector('.overview').setAttribute('aria-busy', 'true');
     try {
-        const resposta = await fetch(`/api/dashboard?dias=${periodo.value}`, {
+        const resposta = await fetch(`/api/dashboard?dias=${periodo.querySelector('input:checked').value}`, {
             headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}
         });
         const dados = await resposta.json();
@@ -27,12 +32,12 @@ async function carregar_dashboard() {
         document.getElementById('resumo-periodo').textContent = `${numero(dados.entradas_periodo)} entradas · ${numero(dados.saidas_periodo)} saídas (unidades no período)`;
         document.getElementById('atualizado').textContent = `Atualizado às ${new Date(dados.atualizado_em).toLocaleTimeString('pt-BR')} · últimos ${dados.periodo_dias} dias`;
         renderizar_fluxo(dados.evolucao);
-        renderizar_barras('grafico-validade', dados.validade, ['#087f78','#d49521','#cb4c63']);
+        renderizar_validade(dados.validade);
         renderizar_barras('grafico-estoque', dados.estoque_por_farmaco);
         document.getElementById('alerta-contagem').textContent = numero(dados.alertas.length);
         document.getElementById('alertas').innerHTML = dados.alertas.length ? dados.alertas.map(item => `
             <div class="alert-item"><div><strong>${escaparHTML(item.farmaco)}</strong><small>Lote ${escaparHTML(item.lote)} · ${numero(item.quantidade)} un. · ${dataCurta(item.validade)}</small></div>
-            <span class="status-pill ${item.dias < 0 ? 'danger' : ''}">${item.dias < 0 ? 'Vencido' : item.dias === 0 ? 'Vence hoje' : `Em ${item.dias} dias`}</span></div>`).join('') : '<p class="empty-state">Nenhum lote com saldo exige atenção à validade.</p>';
+            <span class="status-pill ${item.dias < 0 ? 'danger' : ''}">${item.dias < 0 ? 'Vencido' : item.dias === 0 ? 'Vence hoje' : `Em ${item.dias} dias`}</span></div>`).join('') : estado_vazio('Validades sob controle', 'Nenhum lote com saldo exige atenção neste momento.');
         document.getElementById('recentes').innerHTML = dados.recentes.length ? dados.recentes.map(item => `
             <tr><td>${escaparHTML(item.farmaco)}<br><small class="muted">Lote ${escaparHTML(item.lote)}</small></td>
             <td><span class="status-pill ${item.tipo === 'Entrada' ? 'success' : 'info'}">${escaparHTML(item.tipo)}</span></td>
@@ -43,17 +48,46 @@ async function carregar_dashboard() {
         mensagem.textContent = `${erro.message} Use Atualizar para tentar novamente.`;
         document.getElementById('atualizado').textContent = dadosPainel ? 'Falha na atualização. Os dados exibidos são da última consulta concluída.' : 'Dados indisponíveis.';
     } finally {
-        botao.disabled = false;
+        botao.setAttribute('aria-busy', 'false');
+        botao.setAttribute('aria-disabled', 'false');
+        botao.querySelector('.button-label').textContent = 'Atualizar';
+        document.querySelector('.overview').classList.remove('is-loading');
         periodo.disabled = false;
+        if (focoPeriodo && document.activeElement === document.body) focoPeriodo.focus({preventScroll: true});
         document.querySelector('.overview').setAttribute('aria-busy', 'false');
     }
+}
+
+// Componentes nativos inspirados nas referências públicas do UI Arc.
+function estado_vazio(titulo, descricao, href = '', acao = '') {
+    return `<div class="empty-state"><span class="empty-symbol" aria-hidden="true">◇</span><strong>${escaparHTML(titulo)}</strong><p>${escaparHTML(descricao)}</p>${href ? `<a class="text-link" href="${href}">${escaparHTML(acao)} →</a>` : ''}</div>`;
+}
+
+function renderizar_validade(itens) {
+    const total = itens.reduce((soma, item) => soma + item.quantidade, 0);
+    const elemento = document.getElementById('grafico-validade');
+    if (!total) {
+        elemento.innerHTML = estado_vazio('Nenhum lote para analisar', 'A distribuição aparecerá quando houver lotes ativos.');
+        return;
+    }
+    const cores = ['#087f78', '#d49521', '#cb4c63'];
+    let deslocamento = 0;
+    const arcos = itens.map((item, indice) => {
+        const proporcao = item.quantidade / total * 100;
+        const arco = `<circle cx="100" cy="100" r="72" fill="none" stroke="${cores[indice]}" stroke-width="18" pathLength="100" stroke-dasharray="${proporcao} ${100 - proporcao}" stroke-dashoffset="${-deslocamento}" transform="rotate(-90 100 100)"/>`;
+        deslocamento += proporcao;
+        return item.quantidade ? arco : '';
+    }).join('');
+    elemento.innerHTML = `<div class="donut-wrap"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="72" fill="none" stroke="#eef3f8" stroke-width="18"/>${arcos}</svg>
+        <div class="donut-center"><strong>${numero(total)}</strong><span>lotes ativos</span></div></div>
+        <ul class="donut-legend" aria-label="Distribuição dos lotes por validade">${itens.map((item, indice) => `<li><span><i style="background:${cores[indice]}" aria-hidden="true"></i>${escaparHTML(item.nome)}</span><strong>${numero(item.quantidade)} <small>${Math.round(item.quantidade / total * 100)}%</small></strong></li>`).join('')}</ul>`;
 }
 
 function renderizar_barras(id, itens, cores = ['#087f78']) {
     const maximo = Math.max(...itens.map(item => item.quantidade), 1);
     document.getElementById(id).innerHTML = itens.length && itens.some(item => item.quantidade) ? itens.map((item, indice) => `
         <div class="bar-row"><div class="bar-label"><span title="${escaparHTML(item.nome)}">${escaparHTML(item.nome)}</span><strong>${numero(item.quantidade)}</strong></div>
-        <div class="bar-track"><div class="bar-fill" style="width:${item.quantidade / maximo * 100}%;background:${cores[indice % cores.length]}"></div></div></div>`).join('') : '<p class="empty-state">Sem dados de estoque para exibir.</p>';
+        <div class="bar-track"><div class="bar-fill" style="width:${item.quantidade / maximo * 100}%;background:${cores[indice % cores.length]}"></div></div></div>`).join('') : estado_vazio('Seu estoque começa aqui', 'Cadastre fármacos e lotes para acompanhar a disponibilidade.', '/estoque.html', 'Gerenciar estoque');
 }
 
 function renderizar_fluxo(serie) {

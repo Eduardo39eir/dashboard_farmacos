@@ -60,3 +60,7 @@ A importação utiliza a pasta principal `TCC/` do ZIP, que contém os fluxos ma
 ## Limites desta versão
 
 O login permanece no Flask com a tabela `usuarios`; não usa Supabase Auth. O Supabase hospeda o banco, acessado somente pelo backend. Logout remove o token no navegador; um token copiado continua válido até expirar. Antes de disponibilizar na Internet, configure HTTPS, limitação de tentativas de login, backups e política de expiração/revogação conforme o uso da instituição. Não existe cadastro público nem recuperação de senha nesta versão.
+
+## Referências de interface
+
+O dashboard adapta padrões de composição do [UI Arc](https://uiarc.dev/components/): [Metric card](https://uiarc.dev/components/metric-card), [Segmented control](https://uiarc.dev/components/segmented-control), [Donut chart](https://uiarc.dev/components/donut-chart) e [Button](https://uiarc.dev/components/button). A implementação é própria em HTML/CSS/JavaScript, compatível com Flask, sem dependências React ou serviços externos na interface. Inclui seleção de período por teclado, distribuição de validade com legenda textual, estados vazios, carregamento e respeito à preferência de movimento reduzido. Os percentuais do gráfico são arredondados por categoria.

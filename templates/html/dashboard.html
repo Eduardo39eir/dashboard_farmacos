@@ -13,9 +13,9 @@
 
 <body class="dashboard-layout">
 
-    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-principal">☰</button>
 
-    <header>
+    <header id="menu-principal">
 
         <img src="/static/images/logo_unesp.png" alt="UNESP">
 
@@ -48,22 +48,26 @@
 
     <div class="content-wrapper">
 
-        <main class="overview">
+        <main class="overview is-loading">
             <div class="overview-heading">
                 <div><p class="eyebrow">SIGIR · MEDICINA NUCLEAR</p><h1>Visão geral do estoque</h1>
                 <p class="muted">Disponibilidade, validade e movimentações em um só lugar.</p></div>
-                <div class="toolbar"><label for="periodo">Período</label>
-                    <select id="periodo"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select>
-                    <button class="btn btn-primary" id="atualizar">Atualizar</button>
+                <div class="toolbar period-toolbar">
+                    <fieldset class="segmented-control" id="periodo"><legend class="sr-only">Período das movimentações</legend>
+                        <label><input type="radio" name="periodo" value="7"><span>7 dias</span></label>
+                        <label><input type="radio" name="periodo" value="30" checked><span>30 dias</span></label>
+                        <label><input type="radio" name="periodo" value="90"><span>90 dias</span></label>
+                    </fieldset>
+                    <button class="btn btn-primary" id="atualizar"><span class="refresh-icon" aria-hidden="true">↻</span><span class="button-label">Atualizar</span></button>
                 </div>
             </div>
             <p id="atualizado" class="muted" aria-live="polite">Carregando indicadores…</p>
             <div id="mensagem" role="alert"></div>
             <section class="metrics" aria-label="Indicadores de estoque">
-                <article class="metric"><span>Unidades disponíveis</span><strong id="unidades">—</strong><small>Em lotes vigentes, sem itens vencidos</small></article>
-                <article class="metric"><span>Lotes ativos</span><strong id="total-lotes">—</strong><small id="resumo-validade">Inclui lotes vencidos para acompanhamento</small></article>
-                <article class="metric"><span>Fármacos cadastrados</span><strong id="total-farmacos">—</strong><small id="fornecedores">—</small></article>
-                <article class="metric"><span>Movimentações registradas</span><strong id="total-movimentacoes">—</strong><small id="resumo-periodo">Histórico completo</small></article>
+                <article class="metric"><div class="metric-heading"><span>Unidades disponíveis</span><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 3 8 4v10l-8 4-8-4V7l8-4Z M4 7l8 4 8-4 M12 11v10"/></svg></span></div><strong id="unidades">—</strong><small>Em lotes vigentes, sem itens vencidos</small></article>
+                <article class="metric"><div class="metric-heading"><span>Lotes ativos</span><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8 M8 13h5 M8 17h3"/></svg></span></div><strong id="total-lotes">—</strong><small id="resumo-validade">Inclui lotes vencidos para acompanhamento</small></article>
+                <article class="metric"><div class="metric-heading"><span>Fármacos cadastrados</span><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m9 15 6-6 M6 18a5 5 0 0 1 0-7l5-5a5 5 0 0 1 7 7l-5 5a5 5 0 0 1-7 0Z"/></svg></span></div><strong id="total-farmacos">—</strong><small id="fornecedores">—</small></article>
+                <article class="metric"><div class="metric-heading"><span>Movimentações registradas</span><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h15l-4-4 M20 17H5l4 4"/></svg></span></div><strong id="total-movimentacoes">—</strong><small id="resumo-periodo">Histórico completo</small></article>
             </section>
             <section class="analytics-grid">
                 <article class="panel trend-panel"><div class="panel-heading"><div><h2>Fluxo de movimentações</h2><p class="muted">Unidades por dia no período selecionado</p></div><span class="legend"><i class="dot teal"></i>Entradas <i class="dot blue"></i>Saídas</span></div>
@@ -74,7 +78,7 @@
                 <article class="panel"><h2>Disponibilidade por fármaco</h2><p class="muted">Até 8 itens com maior quantidade vigente</p><div id="grafico-estoque" class="stock-chart"></div></article>
                 <article class="panel"><div class="panel-heading"><div><h2>Atenção à validade</h2><p class="muted">Lotes com saldo, vencidos ou a vencer em até 10 dias</p></div><span id="alerta-contagem" class="count-badge">—</span></div><div id="alertas" class="alerts-list"></div></article>
             </section>
-            <section class="panel recent-panel"><div class="panel-heading"><div><h2>Últimas movimentações</h2><p class="muted">As 6 mais recentes no período selecionado</p></div><div class="toolbar"><button id="exportar" class="btn btn-outline" disabled>Exportar CSV</button><a href="/movimentacoes.html" class="text-link">Ver histórico →</a></div></div>
+            <section class="panel recent-panel"><div class="panel-heading"><div><h2>Últimas movimentações</h2><p class="muted">As 6 mais recentes no período selecionado</p></div><div class="toolbar"><button id="exportar" class="btn btn-outline" disabled>Exportar fluxo CSV</button><a href="/movimentacoes.html" class="text-link">Ver histórico →</a></div></div>
                 <div class="table-scroll"><table><thead><tr><th>Fármaco / lote</th><th>Operação</th><th>Quantidade</th><th>Responsável</th><th>Data</th></tr></thead><tbody id="recentes"></tbody></table></div>
             </section>
         </main>
@@ -98,6 +102,7 @@
             menuToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 header.classList.toggle('open');
+                menuToggle.setAttribute('aria-expanded', header.classList.contains('open'));
             });
 
             // Fecha o menu ao clicar fora dele no mobile
@@ -112,6 +117,7 @@
                 ) {
 
                     header.classList.remove('open');
+                    menuToggle.setAttribute('aria-expanded', 'false');
 
                 }
 
